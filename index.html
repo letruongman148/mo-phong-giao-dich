@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mô phỏng giao dịch</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: auto; }
+    input, button { margin: 5px 0; padding: 8px; width: 100%; }
+    button { background-color: #3b82f6; color: white; border: none; }
+    #result { margin-top: 15px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>Mô phỏng giao dịch</h2>
+
+  <label>Tỷ lệ thắng (%):</label>
+  <input type="number" id="winRate" value="60" />
+
+  <label>Tỷ lệ Risk:Reward (RR):</label>
+  <input type="number" id="rrRatio" value="2" />
+
+  <label>Số vốn ban đầu:</label>
+  <input type="number" id="initialCapital" value="100" />
+
+  <label>% rủi ro mỗi lệnh:</label>
+  <input type="number" id="riskPerTrade" value="0.5" />
+
+  <label>Số lần giao dịch:</label>
+  <input type="number" id="trades" value="100" />
+
+  <button onclick="simulateTrade()">Mô phỏng</button>
+  <div id="result"></div>
+
+  <script>
+    function simulateTrade() {
+      const winRate = parseFloat(document.getElementById("winRate").value);
+      const rrRatio = parseFloat(document.getElementById("rrRatio").value);
+      let capital = parseFloat(document.getElementById("initialCapital").value);
+      const riskPerTrade = parseFloat(document.getElementById("riskPerTrade").value);
+      const trades = parseInt(document.getElementById("trades").value);
+
+      for (let i = 0; i < trades; i++) {
+        const isWin = Math.random() * 100 < winRate;
+        const riskAmount = capital * (riskPerTrade / 100);
+        if (isWin) {
+          capital += riskAmount * rrRatio;
+        } else {
+          capital -= riskAmount;
+        }
+      }
+
+      document.getElementById("result").innerText = "Kết quả sau mô phỏng: " + capital.toFixed(2);
+    }
+  </script>
+</body>
+</html>
