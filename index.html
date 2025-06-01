@@ -1,57 +1,124 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Mô phỏng giao dịch</title>
-  <style>
-    body { font-family: sans-serif; max-width: 600px; margin: auto; }
-    input, button { margin: 5px 0; padding: 8px; width: 100%; }
-    button { background-color: #3b82f6; color: white; border: none; }
-    #result { margin-top: 15px; font-weight: bold; }
-  </style>
-</head>
-<body>
-  <h2>Mô phỏng giao dịch</h2>
+import React, { useState } from 'react';
 
-  <label>Tỷ lệ thắng (%):</label>
-  <input type="number" id="winRate" value="60" />
+const App = () => {
+    const [imageUrl, setImageUrl] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    // State to hold the user-defined prompt
+    const [userPrompt, setUserPrompt] = useState("Book cover image only, no text on the image. The image should feature a prominent upward-trending candlestick chart, possibly a strong upward curve with many green candles, symbolizing growth momentum. Include an abstract symbol of development/momentum, such as an upward arrow or a bar growth chart, with financial elements surrounding it. Combine the chart with currency symbols (like dollar signs, coins) flying upwards. The overall aesthetic should convey dynamism, financial growth, and strategic trading.");
 
-  <label>Tỷ lệ Risk:Reward (RR):</label>
-  <input type="number" id="rrRatio" value="2" />
+    const generateImage = async () => {
+        setLoading(true);
+        setError('');
+        setImageUrl('');
 
-  <label>Số vốn ban đầu:</label>
-  <input type="number" id="initialCapital" value="100" />
+        try {
+            const payload = { instances: { prompt: userPrompt }, parameters: { "sampleCount": 1 } };
+            const apiKey = ""; // API key will be provided by the environment
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
 
-  <label>% rủi ro mỗi lệnh:</label>
-  <input type="number" id="riskPerTrade" value="0.5" />
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
 
-  <label>Số lần giao dịch:</label>
-  <input type="number" id="trades" value="100" />
+            // Check if the response was successful before attempting to parse JSON
+            if (!response.ok) {
+                const errorText = await response.text(); // Read response as text to get more details
+                throw new Error(`API request failed with status ${response.status}: ${errorText}`);
+            }
 
-  <button onclick="simulateTrade()">Mô phỏng</button>
-  <div id="result"></div>
+            const result = await response.json();
 
-  <script>
-    function simulateTrade() {
-      const winRate = parseFloat(document.getElementById("winRate").value);
-      const rrRatio = parseFloat(document.getElementById("rrRatio").value);
-      let capital = parseFloat(document.getElementById("initialCapital").value);
-      const riskPerTrade = parseFloat(document.getElementById("riskPerTrade").value);
-      const trades = parseInt(document.getElementById("trades").value);
-
-      for (let i = 0; i < trades; i++) {
-        const isWin = Math.random() * 100 < winRate;
-        const riskAmount = capital * (riskPerTrade / 100);
-        if (isWin) {
-          capital += riskAmount * rrRatio;
-        } else {
-          capital -= riskAmount;
+            if (result.predictions && result.predictions.length > 0 && result.predictions[0].bytesBase64Encoded) {
+                const url = `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+                setImageUrl(url);
+            } else {
+                setError('Không thể tạo ảnh. Cấu trúc phản hồi API không mong muốn.');
+                console.error('Unexpected API response structure:', result);
+            }
+        } catch (err) {
+            setError('Đã xảy ra lỗi khi tạo ảnh: ' + err.message);
+            console.error('Error generating image:', err);
+        } finally {
+            setLoading(false);
         }
-      }
+    };
 
-      document.getElementById("result").innerText = "Kết quả sau mô phỏng: " + capital.toFixed(2);
-    }
-  </script>
-</body>
-</html>
+    const downloadImage = () => {
+        if (imageUrl) {
+            const link = document.createElement('a');
+            link.href = imageUrl;
+            link.download = 'anh_bia_sach.png'; // Default filename
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4" style={{ fontFamily: 'Arial, sans-serif' }}>
+            <div className="bg-white p-8 rounded-lg shadow-xl max-w-2xl w-full text-center">
+                <h1 className="text-4xl font-bold text-gray-800 mb-4">Tạo Ảnh Bìa Sách</h1>
+                <h2 className="text-2xl font-semibold text-blue-600 mb-6">Nghệ Thuật Swing Trading Cổ Phiếu Đà Tăng Trưởng</h2>
+
+                {/* Input box for image description */}
+                <div className="mb-6 w-full">
+                    <label htmlFor="imagePrompt" className="block text-gray-700 text-lg font-medium mb-2">Mô tả ảnh:</label>
+                    <textarea
+                        id="imagePrompt"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+                        rows="5"
+                        value={userPrompt}
+                        onChange={(e) => setUserPrompt(e.target.value)}
+                        placeholder="Nhập mô tả chi tiết cho ảnh bìa sách..."
+                    ></textarea>
+                </div>
+
+                <button
+                    onClick={generateImage}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 mb-4"
+                    disabled={loading}
+                >
+                    {loading ? (
+                        <div className="flex items-center justify-center">
+                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Đang tạo ảnh...
+                        </div>
+                    ) : (
+                        'Tạo Ảnh Bìa Sách'
+                    )}
+                </button>
+
+                {error && (
+                    <p className="text-red-500 mt-4">{error}</p>
+                )}
+
+                {imageUrl && (
+                    <div className="mt-8">
+                        <h3 className="text-xl font-medium text-gray-700 mb-4">Ảnh Bìa Sách của bạn:</h3>
+                        <img
+                            src={imageUrl}
+                            alt="Ảnh bìa sách"
+                            className="w-full h-auto rounded-lg shadow-lg border-2 border-gray-200 object-contain"
+                            style={{ maxHeight: '600px' }}
+                        />
+                        {/* Download button */}
+                        <button
+                            onClick={downloadImage}
+                            className="mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+                        >
+                            Tải Ảnh Về
+                        </button>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+export default App;
