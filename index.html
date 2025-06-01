@@ -60,8 +60,8 @@ const App = () => {
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4" style={{ fontFamily: 'Arial, sans-serif' }}>
             <div className="bg-white p-8 rounded-lg shadow-xl max-w-2xl w-full text-center">
-                <h1 className="text-4xl font-bold text-gray-800 mb-4">Tạo Ảnh Bìa Sách</h1>
-                <h2 className="text-2xl font-semibold text-blue-600 mb-6">Nghệ Thuật Swing Trading Cổ Phiếu Đà Tăng Trưởng</h2>
+                <h1 className="text-4xl font-bold text-gray-800 mb-4">IMAI</h1>
+                <h2 className="text-2xl font-semibold text-blue-600 mb-6">AI Tạo Ảnh Mới Nhất của Lê Trường Mãn</h2>
 
                 {/* Input box for image description */}
                 <div className="mb-6 w-full">
@@ -72,7 +72,7 @@ const App = () => {
                         rows="5"
                         value={userPrompt}
                         onChange={(e) => setUserPrompt(e.target.value)}
-                        placeholder="Nhập mô tả chi tiết cho ảnh bìa sách..."
+                        placeholder="Nhập mô tả chi tiết cho ảnh bằng tiếng Anh..."
                     ></textarea>
                 </div>
 
@@ -90,7 +90,7 @@ const App = () => {
                             Đang tạo ảnh...
                         </div>
                     ) : (
-                        'Tạo Ảnh Bìa Sách'
+                        'Tạo Ảnh'
                     )}
                 </button>
 
