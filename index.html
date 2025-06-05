@@ -1,124 +1,286 @@
 import React, { useState } from 'react';
 
+// Main App component
 const App = () => {
-    const [imageUrl, setImageUrl] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-    // State to hold the user-defined prompt
-    const [userPrompt, setUserPrompt] = useState("Book cover image only, no text on the image. The image should feature a prominent upward-trending candlestick chart, possibly a strong upward curve with many green candles, symbolizing growth momentum. Include an abstract symbol of development/momentum, such as an upward arrow or a bar growth chart, with financial elements surrounding it. Combine the chart with currency symbols (like dollar signs, coins) flying upwards. The overall aesthetic should convey dynamism, financial growth, and strategic trading.");
+  // State to manage the expanded/collapsed state of each section
+  const [expandedSection, setExpandedSection] = useState(null);
 
-    const generateImage = async () => {
-        setLoading(true);
-        setError('');
-        setImageUrl('');
+  // Function to toggle a section's expanded state
+  const toggleSection = (sectionId) => {
+    setExpandedSection(expandedSection === sectionId ? null : sectionId);
+  };
 
-        try {
-            const payload = { instances: { prompt: userPrompt }, parameters: { "sampleCount": 1 } };
-            const apiKey = ""; // API key will be provided by the environment
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
-
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            // Check if the response was successful before attempting to parse JSON
-            if (!response.ok) {
-                const errorText = await response.text(); // Read response as text to get more details
-                throw new Error(`API request failed with status ${response.status}: ${errorText}`);
-            }
-
-            const result = await response.json();
-
-            if (result.predictions && result.predictions.length > 0 && result.predictions[0].bytesBase64Encoded) {
-                const url = `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
-                setImageUrl(url);
-            } else {
-                setError('Không thể tạo ảnh. Cấu trúc phản hồi API không mong muốn.');
-                console.error('Unexpected API response structure:', result);
-            }
-        } catch (err) {
-            setError('Đã xảy ra lỗi khi tạo ảnh: ' + err.message);
-            console.error('Error generating image:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const downloadImage = () => {
-        if (imageUrl) {
-            const link = document.createElement('a');
-            link.href = imageUrl;
-            link.download = 'anh_bia_sach.png'; // Default filename
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-    };
-
-    return (
-        <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4" style={{ fontFamily: 'Arial, sans-serif' }}>
-            <div className="bg-white p-8 rounded-lg shadow-xl max-w-2xl w-full text-center">
-                <h1 className="text-4xl font-bold text-gray-800 mb-4">IMAI</h1>
-                <h2 className="text-2xl font-semibold text-blue-600 mb-6">AI Tạo Ảnh Mới Nhất của Lê Trường Mãn</h2>
-
-                {/* Input box for image description */}
-                <div className="mb-6 w-full">
-                    <label htmlFor="imagePrompt" className="block text-gray-700 text-lg font-medium mb-2">Mô tả ảnh:</label>
-                    <textarea
-                        id="imagePrompt"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
-                        rows="5"
-                        value={userPrompt}
-                        onChange={(e) => setUserPrompt(e.target.value)}
-                        placeholder="Nhập mô tả chi tiết cho ảnh bằng tiếng Anh..."
-                    ></textarea>
-                </div>
-
-                <button
-                    onClick={generateImage}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 mb-4"
-                    disabled={loading}
-                >
-                    {loading ? (
-                        <div className="flex items-center justify-center">
-                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Đang tạo ảnh...
-                        </div>
-                    ) : (
-                        'Tạo Ảnh'
-                    )}
-                </button>
-
-                {error && (
-                    <p className="text-red-500 mt-4">{error}</p>
-                )}
-
-                {imageUrl && (
-                    <div className="mt-8">
-                        <h3 className="text-xl font-medium text-gray-700 mb-4">Ảnh Bìa Sách của bạn:</h3>
-                        <img
-                            src={imageUrl}
-                            alt="Ảnh bìa sách"
-                            className="w-full h-auto rounded-lg shadow-lg border-2 border-gray-200 object-contain"
-                            style={{ maxHeight: '600px' }}
-                        />
-                        {/* Download button */}
-                        <button
-                            onClick={downloadImage}
-                            className="mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
-                        >
-                            Tải Ảnh Về
-                        </button>
-                    </div>
-                )}
-            </div>
+  // Section data for easy rendering
+  const sections = [
+    {
+      id: 'what-is-swing-trading',
+      title: '❓ Swing Trading là gì?',
+      content: (
+        <>
+          <p className="mb-2">Nếu bạn không có thời gian ngồi theo dõi thị trường cả ngày như một day trader, nhưng cũng không đủ kiên nhẫn để đầu tư dài hạn như Warren Buffett, thì Swing Trading có thể là lựa chọn hoàn hảo.</p>
+          <blockquote className="border-l-4 border-blue-500 pl-4 italic text-gray-700">
+            Đây là hình thức đầu tư ngắn hạn, thường giữ lệnh từ 1 đến 5 ngày, đôi khi kéo dài vài tuần — nhằm tận dụng các sóng ngắn trong xu hướng lớn để kiếm lợi nhuận.
+          </blockquote>
+        </>
+      ),
+    },
+    {
+      id: 'why-suitable-for-beginners',
+      title: '⚖️ Vì sao Swing Trading phù hợp với người mới?',
+      content: (
+        <ul className="list-disc list-inside space-y-1">
+          <li>Không đòi hỏi phải "full-time" theo dõi thị trường</li>
+          <li>Linh hoạt, có thể giao dịch theo sóng mà không cần ôm quá lâu</li>
+          <li>Có thể học nhanh, thực hành với tài khoản nhỏ</li>
+          <li>Quản trị rủi ro tốt hơn khi biết rõ điểm vào/ra lệnh</li>
+        </ul>
+      ),
+    },
+    {
+      id: 'four-stages-of-trend',
+      title: '🔄 Bốn giai đoạn chính trong xu hướng & cách hành động:',
+      content: (
+        <>
+              <div className="space-y-4">
+                  <div>
+            <h4 className="font-semibold text-lg mb-1">Giai đoạn 1: Tích lũy (Accumulation)</h4>
+            <ul className="list-disc list-inside">
+              <li>Thị trường đang tích lũy đi ngang</li>
+              <li>Bạn chỉ nên quan sát, lên kế hoạch, phân tích điểm mua</li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-semibold text-lg mb-1">Giai đoạn 2: Tăng giá (Markup)</h4>
+            <ul className="list-disc list-inside">
+              <li>Cổ phiếu bắt đầu tạo đỉnh cao hơn, đáy cao hơn</li>
+              <li>Đây là lúc tham gia lệnh</li>
+              <li>Quản lý lệnh thắng bằng cách nâng điểm dừng lỗ dần</li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-semibold text-lg mb-1">Giai đoạn 3: Phân phối (Distribution)</h4>
+            <ul className="list-disc list-inside">
+              <li>Thị trường chậm lại, dao động thất thường</li>
+              <li>Đã đến lúc chốt lời một phần hoặc toàn bộ</li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-semibold text-lg mb-1">Giai đoạn 4: Giảm giá (Decline)</h4>
+            <ul className="list-disc list-inside">
+              <li>Xu hướng ngắn hạn giảm</li>
+              <li>Dù xu hướng dài hạn còn tăng, KHÔNG nên tham gia</li>
+              <li>Hãy đợi xu hướng ngắn hạn quay lại đồng thuận → vào lệnh an toàn hơn</li>
+            </ul>
+          </div>
         </div>
-    );
+        </>
+      ),
+    },
+    {
+      id: 'illustration',
+      title: '📷 Hình ảnh minh họa:',
+      content: (
+  <>
+    <img src="https://chungkhoanltm.com/wp-content/uploads/2025/06/Screenshot_2.png" alt="Minh họa khung thời gian" className="mt-2 rounded-md" />
+  </>
+  ),
+  },
+    {
+      id: 'combine-timeframes',
+      title: '⏳ Cách kết hợp đa khung thời gian hiệu quả:',
+      content: (
+          <>
+        <ul className="list-disc list-inside space-y-1">
+          <li>Dài hạn (Weekly/Daily) → xác định xu hướng chính</li>
+          <li>Ngắn hạn (Ngày/30 phút) → xác định điểm vào tối ưu</li>
+        </ul>
+        <img src="https://chungkhoanltm.com/wp-content/uploads/2025/06/da-khung-timepng.png" alt="Minh họa khung thời gian" className="mt-2 rounded-md" />
+          </>
+      ),
+    },
+    {
+      id: 'core-principles',
+      title: '📌 Nguyên tắc cốt lõi: Mua khi xu hướng đồng thuận ở nhiều khung thời gian',
+      content: (
+        <>
+          <p className="mb-2">Một cổ phiếu có thể:</p>
+          <ul className="list-disc list-inside mb-2">
+            <li>Tăng giá ở khung dài hạn (tuần/ngày)</li>
+            <li>Nhưng đang điều chỉnh ở khung ngắn hạn (ngày/30 phút)</li>
+          </ul>
+          <p className="font-semibold text-blue-700">Vì vậy, hãy đợi đến khi xu hướng ngắn hạn “quay lại” đồng thuận với xu hướng dài hạn, rồi mới vào lệnh. Đây là lúc xác suất thành công cao nhất.</p>
+        </>
+      ),
+    },
+    {
+      id: 'two-questions',
+      title: '🧠 Hai câu hỏi bạn PHẢI tự hỏi trước khi vào lệnh:',
+      content: (
+        <div className="space-y-4">
+          <div>
+            <h4 className="font-semibold text-lg mb-1">1. Cổ phiếu đến từ đâu? (RỦI RO)</h4>
+            <ul className="list-disc list-inside mb-2">
+              <li>Nếu cổ phiếu vừa điều chỉnh hoặc tích lũy =&gt; ít rủi ro hơn</li>
+              <li>Nếu cổ phiếu vừa "break out" mạnh =&gt; cẩn thận, có thể đã "hết xăng" để đi tiếp</li>
+            </ul>
+            <p className="font-semibold text-green-700">✅ Hãy tìm vùng hỗ trợ chắc chắn, đặt điểm cắt lỗ gần đó → càng gần, rủi ro càng thấp.</p>
+          </div>
+          <div>
+            <h4 className="font-semibold text-lg mb-1">2. Cổ phiếu còn tiềm năng đi đến đâu? (PHẦN THƯỞNG)</h4>
+            <ul className="list-disc list-inside mb-2">
+              <li>Quan sát vùng kháng cự phía trên, các ngưỡng giá tiềm năng</li>
+              <li>Đừng vào lệnh nếu khoảng lời quá ngắn so với rủi ro phải chịu</li>
+            </ul>
+            <p className="font-semibold text-green-700">✅ Chỉ tham gia nếu phần thưởng tiềm năng lớn hơn rủi ro ít nhất 2:1</p>
+          </div>
+        </div>
+      ),
+    },
+            {
+      id: 'important-notes',
+      title: '📉 Lưu ý quan trọng:',
+      content: (
+        <>
+          <blockquote className="border-l-4 border-blue-500 pl-4 italic text-gray-700 mb-2">
+            “Thà ở ngoài thị trường và ước gì mình đang trong, còn hơn đang trong và ước gì mình ở ngoài.”
+          </blockquote>
+          <ul className="list-disc list-inside space-y-1">
+            <li>Không nên đuổi theo thị trường</li>
+            <li>Không vào lệnh khi giá đang điều chỉnh (pullback) chưa rõ xu hướng</li>
+            <li>Quản trị rủi ro là ưu tiên số 1</li>
+          </ul>
+        </>
+      ),
+    },
+    {
+      id: 'stock-selection-tips',
+      title: '📊 Mẹo chọn cổ phiếu tiềm năng cho swing trading:',
+      content: (
+        <ol className="list-decimal list-inside space-y-1">
+          <li>Chọn cổ phiếu có xu hướng tăng ổn định trong 150–200 ngày gần nhất</li>
+          <li>Giá nằm trên đường trung bình động 50 ngày (50DMA) đang dốc lên</li>
+          <li>Tránh những cổ phiếu vừa tăng mạnh liên tục — có thể điều chỉnh bất cứ lúc nào</li>
+        </ol>
+      ),
+    },
+    {
+      id: 'illustration',
+      title: '🎬 Video áp dụng thực tế:',
+      content: (
+  <>
+    <ul className="list-disc list-inside space-y-1">
+      <li>Dài hạn (Daily/Weekly) → xác định xu hướng chính</li>
+      <li>Ngắn hạn (30 phút / 1 giờ) → xác định điểm vào tối ưu</li>
+    </ul>
+    <div className="mt-4">
+      <iframe
+        width="100%"
+        height="315"
+        src="https://www.youtube.com/embed/rFHRFzgk9jo"
+        title="YouTube video"
+        frameBorder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+        className="rounded-md"
+      ></iframe>
+    </div>
+  </>
+),
+    },
+    {
+      id: 'conclusion',
+      title: '✅ Kết luận:',
+      content: (
+        <ul className="list-disc list-inside space-y-1">
+          <li>Swing Trading không dành cho người nóng vội.</li>
+          <li>Nhưng nếu bạn biết chờ thời điểm đúng, quản trị rủi ro tốt, và hành động khi xu hướng đồng thuận, bạn hoàn toàn có thể:
+            <ul className="list-circle list-inside ml-4 mt-1">
+              <li>Kiếm lợi nhuận ổn định</li>
+              <li>Không cần theo dõi thị trường 24/7</li>
+              <li>Tăng trưởng tài khoản bền vững</li>
+            </ul>
+          </li>
+        </ul>
+      ),
+    },
+  ];
+
+  return (
+    // Tailwind CSS for basic styling and responsiveness
+    <div className="min-h-screen bg-gray-100 p-4 font-inter">
+      {/* Tailwind CDN for styling */}
+      <script src="https://cdn.tailwindcss.com"></script>
+      <style>
+        {`
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+          body {
+            font-family: 'Inter', sans-serif;
+          }
+          /* Custom styling for list-circle */
+          .list-circle {
+            list-style-type: circle;
+          }
+          .list-disc {
+            list-style-type: disc;
+          }
+          .list-decimal {
+            list-style-type: decimal;
+          }
+        `}
+      </style>
+
+      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-xl p-6 md:p-8">
+        <h1 className="text-3xl md:text-4xl font-bold text-center text-blue-700 mb-6 leading-tight">
+          🎯 Swing Trading Cho Người Mới: Hướng Dẫn Toàn Diện Từ A đến Z
+        </h1>
+
+        <div className="mb-8 p-4 bg-blue-50 rounded-lg text-blue-800 border border-blue-200">
+          <p className="text-lg">Chào mừng bạn đến với hướng dẫn Swing Trading dành cho người mới! Hãy khám phá từng phần để nắm vững kiến thức.</p>
+        </div>
+
+        {sections.map((section) => (
+          <div key={section.id} className="mb-4 bg-gray-50 rounded-lg shadow-sm overflow-hidden border border-gray-200">
+            <button
+              onClick={() => toggleSection(section.id)}
+              className="w-full flex justify-between items-center p-4 text-left font-semibold text-lg text-gray-800 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-all duration-300 rounded-t-lg"
+              aria-expanded={expandedSection === section.id}
+            >
+              {section.title}
+              <svg
+                className={`w-6 h-6 transform transition-transform duration-300 ${
+                  expandedSection === section.id ? 'rotate-180' : 'rotate-0'
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+            <div
+              className={`transition-all duration-500 ease-in-out ${
+                expandedSection === section.id ? 'max-h-screen opacity-100 p-4' : 'max-h-0 opacity-0 overflow-hidden p-0'
+              }`}
+            >
+              <div className="bg-white rounded-b-lg pt-2 pb-4 px-2">
+                {section.content}
+              </div>
+            </div>
+          </div>
+        ))}
+
+        <hr className="my-8 border-gray-300" />
+
+        <div className="text-center italic text-gray-600">
+          <blockquote className="text-xl mb-4">
+            <span className="font-bold text-blue-700">"Sự đơn giản là đỉnh cao của tinh tế."</span> – Leonardo da Vinci
+          </blockquote>
+          <p className="text-lg">Hãy giữ chiến lược của bạn đơn giản, rõ ràng và thực tế. Thành công đến từ kỷ luật, không phải may mắn.</p>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default App;
